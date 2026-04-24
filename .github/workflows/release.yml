@@ -14,11 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Get current time
-        uses: srfrnk/current-time@master
-        id: current-time
-        with:
-          format: YYYYMMDDHHmmss
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
@@ -39,8 +34,6 @@ jobs:
         run: chmod +x ./gradlew
       - name: Build with Gradle
         run: ./gradlew :fabric:build -x javadoc -Pmod_version=${{ github.ref_name }}
-        env:
-          BUILD_TIME: ${{ steps.current-time.outputs.formattedTime }}
       - name: Publish (GitHub Releases)
         id: publish_github
         uses: Kira-NT/mc-publish@995edadc13559a8b28d0b7e6571229f067ec7659
