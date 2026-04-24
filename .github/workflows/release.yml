@@ -29,16 +29,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
       - name: Bootstrap Loom Cache
-        run: ./gradlew :common:genSources --no-daemon --refresh-dependencies --configure-on-demand
-      - name: Debug Loom Cache Contents
-        shell: bash
-        run: |
-          echo "=== Project loom-cache ==="
-          ls -R .gradle/loom-cache || true
-          echo "=== Global fabric-loom cache ==="
-          ls -R ~/.gradle/caches/fabric-loom || true
+        run: ./gradlew :common:genSources
       - name: Build with Gradle
-        run: ./gradlew :fabric:build -x javadoc --no-daemon
+        run: ./gradlew :fabric:build -x javadoc
         env:
           BUILD_TIME: ${{ steps.current-time.outputs.formattedTime }}
       - name: Publish (GitHub Releases)

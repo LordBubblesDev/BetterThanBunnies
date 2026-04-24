@@ -9,7 +9,7 @@ plugins {
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "net.minecraft:client:${project.minecraft_version}"
-    compileOnly "net.minecraft:minecraft-merged-deobf:${project.minecraft_version}"
+    compileOnly files("${gradle.gradleUserHomeDir}/caches/fabric-loom/${project.minecraft_version}/minecraft-client.jar")
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "com.teamresourceful.resourcefulconfig:resourcefulconfig-fabric-26.1:4.0.1"
 
