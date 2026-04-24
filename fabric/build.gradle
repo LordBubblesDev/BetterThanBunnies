@@ -11,7 +11,7 @@ dependencies {
     minecraft "net.minecraft:client:${project.minecraft_version}"
     compileOnly files("${gradle.gradleUserHomeDir}/caches/fabric-loom/${project.minecraft_version}/minecraft-client.jar")
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    implementation "com.teamresourceful.resourcefulconfig:resourcefulconfig-fabric-26.1:4.0.1"
+    implementation "com.teamresourceful.resourcefulconfig:resourcefulconfig-fabric-${project.resourcefulconfig_version}"
 
     //Additional dependencies defined in build-conventions plugin in buildSrc
 }
@@ -45,8 +45,6 @@ tasks.named('processResources', ProcessResources).configure {
     }
 }
 
-if ("${project.minecraft_version}".toString().startsWith("26.1")) {
-    tasks.named('compileJava', JavaCompile).configure {
-        dependsOn 'genSources'
-    }
+tasks.named('compileJava', JavaCompile).configure {
+    dependsOn 'genSources'
 }

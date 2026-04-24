@@ -9,8 +9,9 @@ plugins {
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "net.minecraft:client:${project.minecraft_version}"
+    compileOnly files("${gradle.gradleUserHomeDir}/caches/fabric-loom/${project.minecraft_version}/minecraft-client.jar")
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    compileOnly "com.teamresourceful.resourcefulconfig:resourcefulconfig-common-26.1:4.0.1"
+    compileOnly "com.teamresourceful.resourcefulconfig:resourcefulconfig-common-${project.resourcefulconfig_version}"
 
     //Additional dependencies defined in build-conventions plugin in buildSrc
 }
@@ -18,9 +19,6 @@ dependencies {
 loom {
     enableTransitiveAccessWideners = false
 
-    if (!"${project.minecraft_version}".toString().startsWith("26.1") && file("src/main/resources/${mod_id}.accesswidener").exists()) {
-        accessWidenerPath = file("src/main/resources/${mod_id}.accesswidener")
-    }
     if (hasMixins) {
         mixin {
             defaultRefmapName = "${project.mod_id}.refmap.json"
