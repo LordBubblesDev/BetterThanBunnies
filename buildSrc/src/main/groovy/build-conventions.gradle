@@ -140,13 +140,13 @@ dependencies {
             }
         }
     }
-    if (isIDE && !isAnAllCompositeBuild) {
-        //This will allow the IDE to make the dependency associations. When building we just copy the srcDirs.
-        if (hasApi && !isApi) {
+    if (!isAnAllCompositeBuild) {
+        // Keep project wiring consistent between IDE and CLI builds.
+        if (hasApi && !isApi && project.findProject(':api') != null) {
             compileOnly project(':api')
         }
         if (!isCommon && !isApi && project.findProject(':common') != null) {
-            compileOnly project(':common')
+            implementation project(':common')
         }
     }
     if (isFabric)
@@ -177,6 +177,12 @@ tasks.withType(JavaCompile).configureEach {
     it.options.release = javaLanguageVersion.asInt()
 }
 
+if (isFabricBased) {
+    tasks.named('compileJava', JavaCompile).configure {
+        dependsOn 'genSources'
+    }
+}
+
 tasks.withType(ProcessResources).configureEach {
     if ("${project.mod_license}".toString().equals("GNU Lesser General Public License v3.0")) {
         from(project.rootDir){
@@ -194,11 +200,7 @@ compileJava {
     }
 }
 
-//Add the api and common source sets for compile to all the other subprojects
-if (hasApi && !isApi && !isIDE) {
-    sourceSets.main.java.srcDirs += ["${project.rootDir}/api/src/main/java"]
-    sourceSets.main.resources.srcDirs += ["${project.rootDir}/api/src/main/resources"]
-}
+// No split-source merging; use project dependencies instead.
 
 if (hasApi && isApi || isCommon) {
     //We don't these tasks as we're just testing compile
@@ -222,10 +224,21 @@ if (hasApi && isApi || isCommon) {
 // Everything below this is for the actual subprojects
 // ===================================================
 
-//IntelliJ doesn't like it when we have combined source sets... We only need this to build and we don't build using the IDE anyway.
-if (!isIDE) {
-    sourceSets.main.java.srcDirs += ["${project.rootDir}/common/src/main/java"]
-    sourceSets.main.resources.srcDirs += ["${project.rootDir}/common/src/main/resources"]
+if (!isCommon && !isApi && project.findProject(':common') != null) {
+    evaluationDependsOn(':common')
+
+    tasks.named('compileJava', JavaCompile).configure {
+        classpath += project(':common').sourceSets.main.compileClasspath
+    }
+
+    tasks.named('jar', Jar).configure {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        from project(':common').sourceSets.main.output
+    }
+
+    tasks.named('processResources', ProcessResources).configure {
+        from project(':common').sourceSets.main.resources
+    }
 }
 
 jar {
