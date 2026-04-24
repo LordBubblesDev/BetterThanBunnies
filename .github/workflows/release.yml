@@ -12,6 +12,8 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK ${{ env.JAVA_VERSION }}
@@ -21,19 +23,22 @@ jobs:
           distribution: 'microsoft'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-      - name: Cache Fabric Loom
+      - name: Setup Gradle Cache
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches/fabric-loom
+            ~/.gradle/caches/neofor*
+            ~/.gradle/caches/fabric*
+            ~/.gradle/caches/modules-*
+            ~/.gradle/caches/loom-cache
             .gradle/loom-cache
-          key: ${{ runner.os }}-loom-${{ hashFiles('**/gradle.properties', '**/build.gradle', '**/settings.gradle', '**/gradle/libs.versions.toml') }}
+          key: ${{ runner.os }}-modtooling-${{ hashFiles('**/gradle.properties', '**/build.gradle', '**/settings.gradle', '**/gradle/libs.versions.toml') }}
           restore-keys: |
-            ${{ runner.os }}-loom-
+            ${{ runner.os }}-modtooling-
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
       - name: Build with Gradle
-        run: ./gradlew :fabric:build -x javadoc -Pmod_version=${{ github.ref_name }}
+        run: ./gradlew :fabric:build :neoforge:build -Pmod_version=${{ github.ref_name }}
       - name: Publish (GitHub Releases)
         id: publish_github
         uses: Kira-NT/mc-publish@995edadc13559a8b28d0b7e6571229f067ec7659
@@ -41,5 +46,5 @@ jobs:
           github-token: ${{ github.token }}
           version: ${{ env.TAG }}
           files: |
-            **/fabric/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
-            **/fabric/build/libs/*-@(sources|javadoc).jar
+            **/fabric/build/libs/*.jar
+            **/neoforge/build/libs/*.jar

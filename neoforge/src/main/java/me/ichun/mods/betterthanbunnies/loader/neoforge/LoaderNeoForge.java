@@ -8,7 +8,6 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 import java.util.function.Supplier;
@@ -19,15 +18,7 @@ public class LoaderNeoForge extends BetterThanBunnies
     public LoaderNeoForge(IEventBus modEventBus, ModContainer container)
     {
         modProxy = this;
-
-        if(FMLEnvironment.dist.isClient())
-        {
-            initClient(modEventBus, container);
-        }
-        else
-        {
-            LOGGER.error("You are loading " + MOD_NAME + " on a server. " + MOD_NAME + " is a client only mod!");
-        }
+        initClient(modEventBus, container);
     }
 
     @OnlyIn(Dist.CLIENT)

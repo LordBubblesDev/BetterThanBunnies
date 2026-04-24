@@ -1,12 +1,12 @@
 package me.ichun.mods.betterthanbunnies.loader.neoforge;
 
 import me.ichun.mods.betterthanbunnies.common.core.EventHandlerClient;
-import net.minecraft.client.model.RabbitModel;
+import net.minecraft.client.model.animal.rabbit.RabbitModel;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RabbitRenderer;
 import net.minecraft.client.renderer.entity.state.RabbitRenderState;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.animal.rabbit.Rabbit;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
