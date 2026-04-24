@@ -40,7 +40,7 @@ jobs:
       - name: Build Fabric
         run: ./gradlew :fabric:build -Pmod_version=${{ github.ref_name }} --no-daemon --stacktrace
       - name: Build NeoForge (verbose)
-        run: ./gradlew :neoforge:build -Pmod_version=${{ github.ref_name }} --no-daemon --stacktrace --info --refresh-dependencies
+        run: ./gradlew :neoforge:build -Pmod_version=${{ github.ref_name }} -Pneogradle.subsystems.decompiler.enabled=false --no-daemon --stacktrace --info --refresh-dependencies
       - name: Upload NeoForge failure diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
