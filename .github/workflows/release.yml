@@ -29,7 +29,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
       - name: Bootstrap Loom Cache
-        run: ./gradlew :fabric:genSources :common:genSources --no-daemon --refresh-dependencies
+        run: ./gradlew :common:genSources --no-daemon --refresh-dependencies
       - name: Build with Gradle
         run: ./gradlew :fabric:build -x javadoc --no-daemon
         env:
