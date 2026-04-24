@@ -10,7 +10,6 @@ dependencies {
     // To change the versions see the gradle.properties file
     minecraft "net.minecraft:client:${project.minecraft_version}"
     if ("${project.minecraft_version}".toString().startsWith("26.1")) {
-        // 26.1 classpath separates common/client and minecraft-merged-deobf can be resources-only.
         compileOnly "net.minecraft:minecraft-common-deobf:${project.minecraft_version}"
         compileOnly "net.minecraft:minecraft-clientonly-deobf:${project.minecraft_version}"
     }
