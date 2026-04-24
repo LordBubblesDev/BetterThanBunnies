@@ -1,0 +1,43 @@
+name: Upload Release Artifacts
+
+on:
+  push:
+    tags: [ '*' ]
+
+env:
+  BUILD_NUMBER: ${{ github.run_number }}
+  JAVA_VERSION: 25
+  TAG: ${{ github.ref_name }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get current time
+        uses: srfrnk/current-time@master
+        id: current-time
+        with:
+          format: YYYYMMDDHHmmss
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'microsoft'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+      - name: Build with Gradle
+        run: ./gradlew :fabric:build -x javadoc
+        env:
+          BUILD_TIME: ${{ steps.current-time.outputs.formattedTime }}
+      - name: Publish (GitHub Releases)
+        id: publish_github
+        uses: Kira-NT/mc-publish@995edadc13559a8b28d0b7e6571229f067ec7659
+        with:
+          github-token: ${{ github.token }}
+          version: ${{ env.TAG }}
+          files: |
+            **/fabric/build/libs/!(*-@(dev|sources|javadoc|slim)).jar
+            **/fabric/build/libs/*-@(sources|javadoc).jar

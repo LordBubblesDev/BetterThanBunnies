@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "me.ichun.mods.betterthanbunnies.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "client.LivingEntityRendererAccessorMixin",
+    "client.RabbitStyleCaptureMixin",
+    "client.RabbitTailMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

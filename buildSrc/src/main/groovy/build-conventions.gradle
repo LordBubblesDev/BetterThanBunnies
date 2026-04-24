@@ -3,17 +3,6 @@ plugins {
     id "com.hypherionmc.modutils.modpublisher" //we can't define version in pre-built scripts
 }
 
-//All mods depend on iChunUtil anyway - loads iChunUtil's common.properties
-Properties properties = new Properties()
-FileInputStream input = new FileInputStream(file("${rootDir}/../iChunUtil/common.properties"))
-properties.load(input)
-input.close()
-
-for (String key : properties.stringPropertyNames()) {
-    ext.set(key, properties.getProperty(key))
-}
-//End load common.properties
-
 //Load our override.properties if it exists
 if (file("${rootDir}/override.properties").exists()) {
     Properties properties1 = new Properties()
@@ -30,6 +19,9 @@ if (file("${rootDir}/override.properties").exists()) {
 def isIDE = System.getProperty("idea.active") == "true" //this is the only check I've tried that works in IntelliJ IDEA's setting
 def isInCompositeBuild = gradle.parent != null //this is only true for included builds in a composite build, not the root composite build itself
 def isAnAllCompositeBuild = "${project.mod_id}".toString().equals("all")  // an "all" project is a composite build of all mods. We are on this project currently.
+if (!gradle.ext.has("projectSubMods")) {
+    gradle.ext.projectSubMods = []
+}
 
 def changelogFile = null
 def actualRootDir = gradle.root != null ? gradle.root.getRootProject().rootDir : project.rootDir
@@ -45,27 +37,27 @@ if (!isAnAllCompositeBuild && file("${actualRootDir}/../AllChangelogs").exists()
     }
 }
 else {
-    ext.set("mod_version", "Unknown!")
+    // Prefer mod_version from gradle.properties; otherwise fall back to minecraft_version.
+    if (!project.hasProperty("mod_version") || "${project.mod_version}".toString().trim().isEmpty()) {
+        ext.set("mod_version", "${project.minecraft_version}")
+    }
 }
 
-def javaVersion = JavaVersion.VERSION_21
+def javaVersion = JavaVersion.VERSION_25
 def javaLanguageVersion = JavaLanguageVersion.of(javaVersion.toString().toInteger())
-def nameCapitalised = "${project.name}".toString().equals("neoforge") ? "NeoForge" : "${project.name}".capitalize()
-def isBuildingiChunUtil = "${project.mod_id}".toString().equals("ichunutil")
+def nameCapitalised = "${project.name}".capitalize()
 
 def hasApi = file("${project.rootDir}/api").exists()
 def isApi = "${project.name}".toString().equals("api")
 def isCommon = "${project.name}".toString().equals("common")
 
 def isFabric = "${project.name}".toString().equals("fabric")
-def isForge = "${project.name}".toString().equals("forge")
-def isNeoForge = "${project.name}".toString().equals("neoforge")
-
 def isFabricBased = hasApi && isApi || isCommon || isFabric
+def isMc261 = "${project.minecraft_version}".toString().startsWith("26.1")
 
-//Everyone has to have a different task that finalizes their jar...
-def finaliseJarTaskName = isFabric ? "remapJar" : "jar"
-def shadowsDependencies = isBuildingiChunUtil || "${project.mod_id}".toString().equals("contentcreatorintegration")
+//For unobfuscated 26.1+, Fabric builds also publish plain jar output.
+def finaliseJarTaskName = "jar"
+def shadowsDependencies = "${project.mod_id}".toString().equals("contentcreatorintegration")
 
 ext {
     replaceProperties = [
@@ -76,10 +68,6 @@ ext {
             mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version, mod_description : mod_description,
             mod_url_home: mod_url_home, mod_url_sources: mod_url_sources, mod_url_issues: mod_url_issues, mod_url_discord: mod_url_discord
     ]
-    if (!isBuildingiChunUtil){
-        replaceProperties.put("ichunutil_version", ichunutil_version)
-        replaceProperties.put("ichunutil_version_range", ichunutil_version_range)
-    }
     hasMixins = file("${project.rootDir}/common/src/main/resources/${project.mod_id}.mixins.json").exists()
     jarManifestAttributes = [
             "Specification-Title"     : "${project.mod_id}",
@@ -107,10 +95,6 @@ repositories {
     mavenLocal()
 
     maven {
-        name = 'ParchmentMC'
-        url = 'https://maven.parchmentmc.org'
-    }
-    maven {
         name = 'CurseMaven'
         url = 'https://cursemaven.com'
     }
@@ -119,60 +103,53 @@ repositories {
     maven {
         url "https://maven.terraformersmc.com/"
     }
+
+    // Resourceful Config
+    maven {
+        url "https://maven.teamresourceful.com/repository/maven-public/"
+    }
 }
 
 dependencies {
-    if (!isBuildingiChunUtil) {
-        if (!isInCompositeBuild) { //Add all of our subprojects as dependencies
-            if (!(isCommon && isAnAllCompositeBuild)) { // Don't add it to common in the "all" build
-                def excludedMods = [
+    if (!isInCompositeBuild) { //Add all of our subprojects as dependencies
+        if (!(isCommon && isAnAllCompositeBuild)) { // Don't add it to common in the "all" build
+            def excludedMods = [
 //                    "BetterThanBunnies",
 //                    "Ding"
-                ]
+            ]
 
-                gradle.ext.projectSubMods.forEach { mod ->
-                    if (excludedMods.contains(mod)) {
-                        println "${mod} is excluded from dependencies."
-                    } else {
-                        println "Adding ${mod} to dependencies for loading in runs."
-                        def dep = isFabricBased ? "fabric" : project.name
-                        def modIdLowerCase = "${mod}".toString().toLowerCase(Locale.US)
-                        if (file("${project.rootDir}/../${mod}/api").exists()) {
-                            compileOnly "me.ichun.mods:${modIdLowerCase}:api"
-                            //add the api dep if it exists
-                        }
-                        //add the common dep
-                        compileOnly "me.ichun.mods:${modIdLowerCase}:common"
-                        //add the modloader specific dep (fabric for common and api)
+            gradle.ext.projectSubMods.forEach { mod ->
+                if (excludedMods.contains(mod)) {
+                    println "${mod} is excluded from dependencies."
+                } else {
+                    println "Adding ${mod} to dependencies for loading in runs."
+                    def dep = isFabricBased ? "fabric" : project.name
+                    def modIdLowerCase = "${mod}".toString().toLowerCase(Locale.US)
+                    if (file("${project.rootDir}/../${mod}/api").exists()) {
+                        compileOnly "me.ichun.mods:${modIdLowerCase}:api"
+                        //add the api dep if it exists
+                    }
+                    //add the common dep
+                    compileOnly "me.ichun.mods:${modIdLowerCase}:common"
+                    //add the modloader specific dep (fabric for common and api)
+                    if (!isMc261) {
                         compileOnly "me.ichun.mods:${modIdLowerCase}:${dep}"
+                    }
 
-                        if ("${mod}".toString().equals("iChunUtil")) {
-                            implementation 'com.moandjiezana.toml:toml4j:0.7.2' // MIT
-                        } else if ("${mod}".toString().equals("CCI1.x") || "${mod}".toString().equals("ContentCreatorIntegration")) {
-                            implementation "io.socket:socket.io-client:1.0.1" // MIT
-                            implementation "org.java-websocket:Java-WebSocket:1.5.3" // MIT
-                        }
+                    if ("${mod}".toString().equals("CCI1.x") || "${mod}".toString().equals("ContentCreatorIntegration")) {
+                        implementation "io.socket:socket.io-client:1.0.1" // MIT
+                        implementation "org.java-websocket:Java-WebSocket:1.5.3" // MIT
                     }
                 }
             }
-        } else {
-            def dep = isFabricBased ? "fabric" : project.name
-            //We don't use the iChunUtil version number as these are substituted
-            compileOnly "me.ichun.mods:ichunutil:common" //add the common dep
-            compileOnly "me.ichun.mods:ichunutil:${dep}"
         }
     }
     if (isIDE && !isAnAllCompositeBuild) {
-        if (isNeoForge) {
-            //New NeoForge's ModDevGradle doesn't generate our NeoForge assets in subprojects, we rely on the parent's project for this now.
-            compileOnly files("${actualRootDir}/neoforge/.gradle/repositories/ng_dummy_ng/net/neoforged/neoforge/${project.neoforge_version}/neoforge-${project.neoforge_version}.jar")
-        }
-
         //This will allow the IDE to make the dependency associations. When building we just copy the srcDirs.
         if (hasApi && !isApi) {
             compileOnly project(':api')
         }
-        if (!isCommon && !isApi) {
+        if (!isCommon && !isApi && project.findProject(':common') != null) {
             compileOnly project(':common')
         }
     }
@@ -181,10 +158,10 @@ dependencies {
         // API and Common are just copies of Fabric build.gradle without loader or API to ensure it compiles without Fabric so we have to add these
 
         // Fabric API. This is technically optional, but you probably want it anyway.
-        modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+        implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
         // Mod Menu for Fabric
-        modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+        implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
         //Lazy DFU for 1.19+ - broke in 1.21
         //modImplementation "curse.maven:lazydfu-433518:3821870"
@@ -221,7 +198,7 @@ compileJava {
     }
 
     //Depend on common being compilable first
-    if (!isCommon && !isApi) {
+    if (!isCommon && !isApi && project.findProject(':common') != null) {
         dependsOn ':common:compileJava'
     }
 }
@@ -232,33 +209,11 @@ if (hasApi && !isApi && !isIDE) {
     sourceSets.main.resources.srcDirs += ["${project.rootDir}/api/src/main/resources"]
 }
 
-//Add iChunUtil's access wideners/transformers - some MLs only accept one file so we just put it all in iChunUtil
-if (!isBuildingiChunUtil) {
-    if (isFabricBased) {
-        def accessWidenerFile = file("${project.rootDir}/../iChunUtil/fabric/src/main/resources/ichunutil.accesswidener")
-        if (accessWidenerFile.exists()) {
-            loom.accessWidenerPath = accessWidenerFile
-        }
-    }
-    else if (isForge) {
-        def accessTransformerFile = file("${project.rootDir}/../iChunUtil/forge/src/main/resources/META-INF/accesstransformer.cfg")
-        if (accessTransformerFile.exists()) {
-            minecraft.accessTransformer = accessTransformerFile
-        }
-    }
-    else if (isNeoForge) {
-        def accessTransformerFile = file("${project.rootDir}/../iChunUtil/neoforge/src/main/resources/META-INF/accesstransformer.cfg")
-        if (accessTransformerFile.exists()) {
-            minecraft.accessTransformers.file(accessTransformerFile)
-        }
-    }
-}
-
 if (hasApi && isApi || isCommon) {
     //We don't these tasks as we're just testing compile
-    def disabledTasks = [ "jar", "remapJar", "publish", "publishToMavenLocal", "publishMod", "publishCurseforge", "publishModrinth" ]
+    def disabledTasks = [ "jar", "publish", "publishToMavenLocal", "publishMod", "publishCurseforge", "publishModrinth" ]
     disabledTasks.forEach { it ->
-        tasks.named(it).configure {
+        tasks.matching { task -> task.name == it }.configureEach {
             enabled = false
         }
     }
@@ -280,20 +235,6 @@ if (hasApi && isApi || isCommon) {
 if (!isIDE) {
     sourceSets.main.java.srcDirs += ["${project.rootDir}/common/src/main/java"]
     sourceSets.main.resources.srcDirs += ["${project.rootDir}/common/src/main/resources"]
-}
-
-if (!isFabric) {
-    // If gradle developers could see me now they'd be rolling in their graves
-    tasks.register("processSource", Sync) {
-        from sourceSets.main.java
-        into "${buildDir}/retokened-${project.name}"
-        def output = isForge ? "@net.minecraftforge.api.distmarker.OnlyIn(net.minecraftforge.api.distmarker.Dist.CLIENT)" : "@net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)"
-        filter(org.apache.tools.ant.filters.ReplaceTokens, beginToken: '@', endToken: ')', tokens:["net.fabricmc.api.Environment(net.fabricmc.api.EnvType.CLIENT": "${output}".toString()])
-    }
-
-    compileJava {
-        source = processSource.outputs
-    }
 }
 
 jar {
@@ -353,7 +294,7 @@ if (hasApi) {
 if (project.hasProperty("key_store")) {
     def signJar = tasks.register("signJar") {
         doLast {
-            def jarFile = isFabric ? file("${remapJar.archivePath}") : file("${jar.archivePath}")
+            def jarFile = file("${jar.archivePath}")
             if (jarFile.exists()) {
                 ant.signjar(
                         jar: jarFile,
@@ -422,7 +363,7 @@ publisher {
     setModrinthID("${project.modrinth_project_id}")
 
     // Curseforge Project ID
-    setCurseID(isFabric ? "${project.curseforge_project_id_fabric}" : "${project.curseforge_project_id_forge}")
+    setCurseID("${project.curseforge_project_id_fabric}")
 
     // Type of release. beta, alpha or release
     // You can also use VersionType.BETA, VersionType.ALPHA or VersionType.RELEASE
@@ -500,34 +441,12 @@ publisher {
         // Modrinth Dependencies.
         // Accepts a slug or id
         modrinthDepends {
-            if (isBuildingiChunUtil) {
-                required "P7dR8mSH" //Fabric API
-            }
-            else {
-                required "P7dR8mSH", "W6ROj0Hl" //Fabric API and iChunUtil
-            }
+            required "P7dR8mSH" //Fabric API
         }
 
         // Curse Dependencies
         curseDepends {
-            if (isBuildingiChunUtil) {
-                required "fabric-api" //Fabric API
-            }
-            else {
-                required "fabric-api", "ichunutil" //Fabric API and iChunUtil
-            }
-        }
-    }
-    else if (!isBuildingiChunUtil) {
-        // Modrinth Dependencies.
-        // Accepts a slug or id
-        modrinthDepends {
-            required "W6ROj0Hl" //iChunUtil
-        }
-
-        // Curse Dependencies
-        curseDepends {
-            required "ichunutil" //iChunUtil
+            required "fabric-api" //Fabric API
         }
     }
 }

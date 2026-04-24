@@ -32,8 +32,8 @@ issueTrackerURL="${mod_url_issues}"
     ordering="NONE"
     side="BOTH"
 [[dependencies.${mod_id}]]
-    modId="ichunutil"
+    modId="resourcefulconfig"
     mandatory=true
-    versionRange="${ichunutil_version_range}"
+    versionRange="[4.0.1,)"
     ordering="NONE"
     side="BOTH"

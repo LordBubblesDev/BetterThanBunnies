@@ -1,6 +1,5 @@
 plugins {
     id 'net.minecraftforge.gradle' version "${forge_gradle_version}"
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
     id 'org.spongepowered.mixin' version '0.7.+'
     id 'build-conventions'
     id 'build-conventions-variations'
@@ -94,6 +93,7 @@ dependencies {
     // that the dep is a ForgeGradle 'patcher' dependency, and its patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft "net.minecraftforge:forge:${project.forge_version}"
+    implementation "com.teamresourceful.resourcefulconfig:resourcefulconfig-forge-26.1:4.0.1"
 
     if (hasMixins) {
         annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'

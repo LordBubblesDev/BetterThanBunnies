@@ -1,9 +1,8 @@
 package me.ichun.mods.betterthanbunnies.loader.forge;
 
+import com.teamresourceful.resourcefulconfig.api.client.ResourcefulConfigScreen;
 import me.ichun.mods.betterthanbunnies.common.BetterThanBunnies;
 import me.ichun.mods.betterthanbunnies.common.core.Config;
-import me.ichun.mods.ichunutil.client.gui.config.WorkspaceConfigs;
-import me.ichun.mods.ichunutil.common.iChunUtil;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ConfigScreenHandler;
@@ -29,11 +28,14 @@ public class LoaderForge extends BetterThanBunnies
     @OnlyIn(Dist.CLIENT)
     private void initClient(FMLJavaModLoadingContext context)
     {
-        config = iChunUtil.d().registerConfig(new Config(), context);
+        CONFIGURATOR.register(Config.class);
 
         eventHandlerClient = new EventHandlerClientForge(context.getModEventBus());
 
-        context.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class, () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> new WorkspaceConfigs(screen, MOD_ID)));
+        context.registerExtensionPoint(
+            ConfigScreenHandler.ConfigScreenFactory.class,
+            () -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> ResourcefulConfigScreen.getFactory(MOD_ID).apply(screen))
+        );
     }
 
 }

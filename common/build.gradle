@@ -1,25 +1,32 @@
 //If you are reading this, this is a direct copy of the Fabric subproject's build.gradle which is also used for the common and api subprojects. Large proportion of setup is done in build-conventions.gradle
 plugins {
     id 'idea'
-    id 'fabric-loom' version "${fabric_loom_version}"
+    id 'net.fabricmc.fabric-loom' version "${fabric_loom_version}"
     id 'build-conventions'
     id 'build-conventions-variations'
 }
 
 dependencies {
     // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.layered() {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${project.parchment_mc_version}:${project.parchment_version}@zip")
+    minecraft "net.minecraft:client:${project.minecraft_version}"
+    if ("${project.minecraft_version}".toString().startsWith("26.1")) {
+        // 26.1 classpath separates common/client and minecraft-merged-deobf can be resources-only.
+        compileOnly "net.minecraft:minecraft-common-deobf:${project.minecraft_version}"
+        compileOnly "net.minecraft:minecraft-clientonly-deobf:${project.minecraft_version}"
     }
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    compileOnly "com.teamresourceful.resourcefulconfig:resourcefulconfig-common-26.1:4.0.1"
 
     //Additional dependencies defined in build-conventions plugin in buildSrc
 }
 
 loom {
-    if (file("src/main/resources/${mod_id}.accesswidener").exists()) {
+    if (!"${project.minecraft_version}".toString().startsWith("26.1")) {
+        splitEnvironmentSourceSets()
+    }
+    enableTransitiveAccessWideners = false
+
+    if (!"${project.minecraft_version}".toString().startsWith("26.1") && file("src/main/resources/${mod_id}.accesswidener").exists()) {
         accessWidenerPath = file("src/main/resources/${mod_id}.accesswidener")
     }
     if (hasMixins) {

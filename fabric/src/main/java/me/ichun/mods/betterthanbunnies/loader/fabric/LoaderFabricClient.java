@@ -2,7 +2,6 @@ package me.ichun.mods.betterthanbunnies.loader.fabric;
 
 import me.ichun.mods.betterthanbunnies.common.BetterThanBunnies;
 import me.ichun.mods.betterthanbunnies.common.core.Config;
-import me.ichun.mods.ichunutil.common.iChunUtil;
 import net.fabricmc.api.ClientModInitializer;
 
 public class LoaderFabricClient extends BetterThanBunnies
@@ -13,8 +12,7 @@ public class LoaderFabricClient extends BetterThanBunnies
     {
         modProxy = this;
 
-        //register  config
-        config = iChunUtil.d().registerConfig(new Config());
+        CONFIGURATOR.register(Config.class);
 
         //Create event handler
         eventHandlerClient = new EventHandlerClientFabric();

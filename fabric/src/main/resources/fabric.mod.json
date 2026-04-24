@@ -21,8 +21,15 @@
   "entrypoints": {
     "client": [
       "me.ichun.mods.betterthanbunnies.loader.fabric.LoaderFabricClient"
+    ],
+    "modmenu": [
+      "me.ichun.mods.betterthanbunnies.loader.fabric.BetterThanBunniesModMenu"
     ]
   },
+
+  "mixins": [
+    "betterthanbunnies.mixins.json"
+  ],
 
   "custom": {
     "modmenu": {
@@ -35,8 +42,8 @@
   "depends": {
     "fabricloader": ">=0.15.0",
     "fabric-api": "*",
-    "minecraft": ">=1.21.3 <1.22",
-    "java": ">=21",
-    "ichunutil": ">=1.0.4"
+    "minecraft": ">=26.1 <=26.1.2",
+    "java": ">=25",
+    "resourcefulconfig": "*"
   }
 }

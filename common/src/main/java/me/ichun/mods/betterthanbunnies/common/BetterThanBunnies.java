@@ -1,8 +1,8 @@
 package me.ichun.mods.betterthanbunnies.common;
 
 import com.mojang.logging.LogUtils;
-import me.ichun.mods.betterthanbunnies.common.core.Config;
 import me.ichun.mods.betterthanbunnies.common.core.EventHandlerClient;
+import com.teamresourceful.resourcefulconfig.api.loader.Configurator;
 import org.slf4j.Logger;
 
 public abstract class BetterThanBunnies
@@ -14,7 +14,7 @@ public abstract class BetterThanBunnies
 
     public static BetterThanBunnies modProxy;
 
-    public static Config config;
+    public static final Configurator CONFIGURATOR = new Configurator(MOD_ID);
 
     public static EventHandlerClient eventHandlerClient;
 }

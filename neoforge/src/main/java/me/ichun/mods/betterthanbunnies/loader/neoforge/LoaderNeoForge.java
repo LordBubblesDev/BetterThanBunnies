@@ -1,9 +1,8 @@
 package me.ichun.mods.betterthanbunnies.loader.neoforge;
 
+import com.teamresourceful.resourcefulconfig.api.client.ResourcefulConfigScreen;
 import me.ichun.mods.betterthanbunnies.common.BetterThanBunnies;
 import me.ichun.mods.betterthanbunnies.common.core.Config;
-import me.ichun.mods.ichunutil.client.gui.config.WorkspaceConfigs;
-import me.ichun.mods.ichunutil.common.iChunUtil;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
@@ -34,11 +33,13 @@ public class LoaderNeoForge extends BetterThanBunnies
     @OnlyIn(Dist.CLIENT)
     private void initClient(IEventBus modEventBus, ModContainer container)
     {
-        //register config
-        config = iChunUtil.d().registerConfig(new Config(), modEventBus, container);
+        CONFIGURATOR.register(Config.class);
 
         eventHandlerClient = new EventHandlerClientNeoForge(modEventBus);
 
-        container.registerExtensionPoint(IConfigScreenFactory.class, (Supplier<IConfigScreenFactory>)() -> (modContainer, screen) -> new WorkspaceConfigs(screen, MOD_ID));
+        container.registerExtensionPoint(
+            IConfigScreenFactory.class,
+            (Supplier<IConfigScreenFactory>)() -> (modContainer, screen) -> ResourcefulConfigScreen.getFactory(MOD_ID).apply(screen)
+        );
     }
 }
