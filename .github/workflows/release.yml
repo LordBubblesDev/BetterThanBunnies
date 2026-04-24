@@ -37,8 +37,20 @@ jobs:
             ${{ runner.os }}-modtooling-
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
-      - name: Build with Gradle
-        run: ./gradlew :fabric:build :neoforge:build -Pmod_version=${{ github.ref_name }}
+      - name: Build Fabric
+        run: ./gradlew :fabric:build -Pmod_version=${{ github.ref_name }} --no-daemon --stacktrace
+      - name: Build NeoForge (verbose)
+        run: ./gradlew :neoforge:build -Pmod_version=${{ github.ref_name }} --no-daemon --stacktrace --info
+      - name: Upload NeoForge failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: neoforge-failure-diagnostics
+          path: |
+            neoforge/build/neoForm/**
+            build/reports/problems/**
+            **/hs_err_pid*.log
+          if-no-files-found: ignore
       - name: Publish (GitHub Releases)
         id: publish_github
         uses: Kira-NT/mc-publish@995edadc13559a8b28d0b7e6571229f067ec7659
