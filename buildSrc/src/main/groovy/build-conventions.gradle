@@ -192,11 +192,6 @@ compileJava {
     if (hasApi && !isApi) {
         dependsOn ":api:compileJava"
     }
-
-    //Depend on common being compilable first
-    if (!isCommon && !isApi && project.findProject(':common') != null) {
-        dependsOn ':common:compileJava'
-    }
 }
 
 //Add the api and common source sets for compile to all the other subprojects

@@ -54,3 +54,9 @@ tasks.named('processResources', ProcessResources).configure {
         expand replaceProperties + [project: project]
     }
 }
+
+if ("${project.minecraft_version}".toString().startsWith("26.1")) {
+    tasks.named('compileJava', JavaCompile).configure {
+        dependsOn 'genSources'
+    }
+}
