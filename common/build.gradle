@@ -16,9 +16,6 @@ dependencies {
 }
 
 loom {
-    if (!"${project.minecraft_version}".toString().startsWith("26.1")) {
-        splitEnvironmentSourceSets()
-    }
     enableTransitiveAccessWideners = false
 
     if (!"${project.minecraft_version}".toString().startsWith("26.1") && file("src/main/resources/${mod_id}.accesswidener").exists()) {
