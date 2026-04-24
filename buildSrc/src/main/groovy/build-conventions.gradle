@@ -39,7 +39,7 @@ if (!isAnAllCompositeBuild && file("${actualRootDir}/../AllChangelogs").exists()
 else {
     // Prefer mod_version from gradle.properties; otherwise fall back to minecraft_version.
     if (!project.hasProperty("mod_version") || "${project.mod_version}".toString().trim().isEmpty()) {
-        ext.set("mod_version", "${project.minecraft_version}")
+        ext.set("mod_version", "0.0.0")
     }
 }
 
